@@ -1,0 +1,7 @@
+*.out
+junk
+*.o
+*~
+*.hi
+dist/
+Credentials
