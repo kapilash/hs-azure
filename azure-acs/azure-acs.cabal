@@ -5,7 +5,7 @@ name:                azure-acs
 version:             0.0.1.0
 synopsis:            API to access Azure ACS token
 -- description:         
-homepage:            http://kapilash-blog.azurewebsites.net/
+homepage:            https://github.com/kapilash/hs-azure
 license:             BSD3
 license-file:        LICENSE
 author:              Hemanth Kapila
