@@ -11,7 +11,7 @@ license-file:        LICENSE
 author:              Hemanth Kapila
 maintainer:          saihemanth@gmail.com
 -- copyright:           
-category:            Web
+category:            Web,Cloud,WindowsAzure
 build-type:          Simple
 -- extra-source-files:  
 cabal-version:       >=1.10
