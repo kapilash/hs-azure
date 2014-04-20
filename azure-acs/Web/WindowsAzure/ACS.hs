@@ -1,18 +1,18 @@
 -- |
--- Module : Cloud.WindowsAzure.ACS
--- Description : API for getting authorization token from Azure ACS. The authorization token is needed by other Azure services like servicebus.
+-- Module : Web.WindowsAzure.ACS
+-- Description : API for requesting password token from Windows Azure ACS. 
 -- Copyright : (c) Hemanth Kapila, 2014
 -- License : BSD3
 -- Maintainer : saihemanth@gmail.com
 -- Stability  : Experimental
 --
--- Provides API to connect to WindowsAzure ACS to get the access token. The token is typically used as the value of Authorization header in http calls to Azure services.
+-- Provides API to request password token from WindowsAzure ACS. The security token is needed by web applications and services that handle authentication using ACS.
 -- Please refer to <http://msdn.microsoft.com/en-us/library/hh278947.aspx ACS Management Service API> for further information on ACS.
 --
 -- Following piece of code illustrates the use of API
 --
 -- @
--- import Cloud.WindowsAzure.ACS 
+-- import Web.WindowsAzure.ACS 
 -- import Network.HTTP.Conduit 
 -- import Network.HTTP.Client.Conduit
 -- import Network.Connection (TLSSettings (..))
@@ -26,7 +26,7 @@
 --      print t1
 -- @
 -- 
-module Cloud.WindowsAzure.ACS ( 
+module Web.WindowsAzure.ACS ( 
   -- * Types
   -- * Acs Info
   AcsInfo (..),
@@ -41,9 +41,6 @@ module Cloud.WindowsAzure.ACS (
 
 import Network.HTTP.Conduit
 import Data.Conduit
-import qualified Data.ByteString.Lazy as L
-import qualified Data.ByteString as B
-
 import Network.HTTP.Types.URI
 import qualified Data.ByteString.Char8 as C
 import qualified Data.Attoparsec.ByteString.Lazy as AP
@@ -64,7 +61,7 @@ import Data.Conduit.Binary(sourceLbs)
 data AcsInfo = AcsInfo String !C.ByteString !C.ByteString !C.ByteString
                  deriving (Eq,Show)
                           
-{- | synonym for the acs token
+{- | synonym for the ACS password token
 -}
 type AcsToken = C.ByteString
 
@@ -95,7 +92,7 @@ wrapToken :: AcsResponse -> AcsToken
 wrapToken (AcsResponse t _) = t
 wrapToken _ = undefined
 
--- | If a valid token is available, it reuses the same. Otherwise, gets token from  on windows azure acs
+-- | If a valid token is available, it is returned. Otherwise, requests password a fresh password token from  windows azure acs
 --
 --  Refer to <http://www.yesodweb.com/book/http-conduit  HTTP Conduit> for information about creating and using 'Manager'
 acsToken :: Manager -> AcsContext -> IO C.ByteString
@@ -114,24 +111,21 @@ acsToken manager (AcsContext info mv) = do
 doAcsPost :: AcsInfo -> Manager  ->IO AcsResponse
 doAcsPost (AcsInfo url endpoint issuer key) manager = do
   request' <- parseUrl ("https://" ++ url ++ ".accesscontrol.windows.net/WRAPv0.9/")
-  let request = addBody endpoint issuer key $ request' {
+  let request = addBody  $ request' {
              method = methodPost
            }
   res <-  httpLbs request manager
   utcTime <- getCurrentTime
   acsResp <- sourceLbs (responseBody res) $$ (sinkParser $ parseResponse utcTime)
   return acsResp
-  
-  
-addBody endpoint issuer key = urlEncodedBody [(C.pack "wrap_scope",endpoint),(C.pack "wrap_name", issuer),(C.pack "wrap_password",key)]
-
-
-parseResponse currTime = do
-  AP.takeTill (== 61)
-  AP.anyWord8
-  b1 <- AP.takeTill (== 38)
-  AP.anyWord8
-  AP.takeTill (== 61)
-  AP.anyWord8
-  i <- decimal
-  return $ AcsResponse (urlDecode False b1) (addUTCTime (fromInteger $ i - 300) currTime)
+ where
+   addBody = urlEncodedBody [(C.pack "wrap_scope",endpoint),(C.pack "wrap_name", issuer),(C.pack "wrap_password",key)]
+   parseResponse currTime = do
+     AP.takeTill (== 61)
+     AP.anyWord8
+     b1 <- AP.takeTill (== 38)
+     AP.anyWord8
+     AP.takeTill (== 61)
+     AP.anyWord8
+     i <- decimal
+     return $ AcsResponse (urlDecode False b1) (addUTCTime (fromInteger $ i - 300) currTime)
