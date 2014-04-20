@@ -47,6 +47,7 @@ import qualified Data.Attoparsec.ByteString.Lazy as AP
 import Data.Attoparsec.ByteString.Char8
 import Control.Concurrent.MVar
 import Network.HTTP.Types.Method(methodPost)
+import Network.HTTP.Types.Header
 import Data.Time.Clock(getCurrentTime, addUTCTime,UTCTime)
 import Data.Conduit.Attoparsec(sinkParser)
 import Data.Conduit.Binary(sourceLbs)
@@ -63,7 +64,7 @@ data AcsInfo = AcsInfo String !C.ByteString !C.ByteString !C.ByteString
                           
 {- | synonym for the ACS password token
 -}
-type AcsToken = C.ByteString
+type AcsToken = Header
 
 data AcsResponse = AcsResponse !AcsToken !UTCTime
                    | NotConnectedToAcs
@@ -95,7 +96,7 @@ wrapToken _ = undefined
 -- | If a valid token is available, it is returned. Otherwise, requests password a fresh password token from  windows azure acs
 --
 --  Refer to <http://www.yesodweb.com/book/http-conduit  HTTP Conduit> for information about creating and using 'Manager'
-acsToken :: Manager -> AcsContext -> IO C.ByteString
+acsToken :: Manager -> AcsContext -> IO AcsToken
 acsToken manager (AcsContext info mv) = do
   utcTime <- getCurrentTime
   acsResp <- takeMVar mv
@@ -128,4 +129,7 @@ doAcsPost (AcsInfo url endpoint issuer key) manager = do
      AP.takeTill (== 61)
      AP.anyWord8
      i <- decimal
-     return $ AcsResponse (urlDecode False b1) (addUTCTime (fromInteger $ i - 300) currTime)
+     return $ AcsResponse (toHeader b1) (addUTCTime (fromInteger $ i - 300) currTime)
+   toHeader bs = (hAuthorization, C.concat [(C.pack  "WRAP access_token=\""), (urlDecode False bs), C.pack "\""])
+     
+     
