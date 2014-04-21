@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                azure-servicebus
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            Windows Azure ServiceBus API
 description:         Haskell wrappers over Windows Azure ServiceBus API.         
 homepage:            https://github.com/kapilash/hs-azure
@@ -21,14 +21,14 @@ library
                        Web.WindowsAzure.ServiceBus.SBTypes
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base >=4.7 && <4.8, 
-                       azure-acs >=0.0 && <0.1, 
-                       bytestring >=0.10 && <0.11, 
+  build-depends:       base >=4.0 && < 5.0, 
+                       azure-acs >=0.0 && <0.2, 
+                       bytestring >=0.10 && <0.12, 
                        http-conduit >=2.1 && <2.2, 
                        conduit >=1.1 && <1.2, 
                        http-types >=0.8 && <0.9, 
-                       attoparsec >=0.11 && <0.12, 
-                       async >=2.0 && <2.1,
+                       attoparsec >=0.10 && <0.12, 
+                       async ,
                        http-client,
                        connection
   -- hs-source-dirs:      
