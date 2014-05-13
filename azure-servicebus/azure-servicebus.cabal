@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                azure-servicebus
-version:             0.1.0.1
+version:             0.1.1.0
 synopsis:            Haskell wrapper over Microsoft Azure ServiceBus REST API
 description:         
         This library provides haskell wrappers over Microsoft Azure ServiceBus REST API.
