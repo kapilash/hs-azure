@@ -1,34 +1,34 @@
 -- |
 -- Module : Web.WindowsAzure.ServiceBus.SBTypes
--- Description : Defines Types for dealing with Windows Azure Service Bus
+-- Description : Haskell Types for interacting with ServiceBus
 -- Copyright : (c) Hemanth Kapila, 2014
 -- License : BSD3
 -- Maintainer : saihemanth@gmail.com
 -- Stability  : Experimental
 --
+-- Provides Types used across the rest of the API.
 -- 
+{-# LANGUAGE OverloadedStrings #-}
+module Web.WindowsAzure.ServiceBus.SBTypes 
+   where
 
-module Web.WindowsAzure.ServiceBus.SBTypes( 
-  -- * Types
-  SBInfo(..),
-  SBContext,
-  -- * initialization
-  sbContext,
-  simpleSBInfo,
-  -- * low-level functions for creating 'Request'
-  enQueueRequest,
-  deQueueRequest
-   )where
+import qualified Data.ByteString.Char8 as C
+import qualified Data.ByteString.Lazy as L
+import Data.Conduit
+import Data.Int
 
 import Web.WindowsAzure.ACS
 import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy as L
 import Network.HTTP.Conduit hiding (requestBodySource)
 import Network.HTTP.Client.Conduit hiding (httpLbs)
-import Network.HTTP.Types.Method(methodPost,methodDelete)
+import Network.HTTP.Types.Method (methodDelete, methodPost)
+import Network.HTTP.Types.Header
 
 import Network.Connection (TLSSettings (..))
-
+import Data.Aeson
+import Data.Monoid
+import Control.Applicative
 
 
 -- | 'SBInfo' is encapsulation of Connection Information needed to connect to a Service Bus Namespace.
@@ -56,28 +56,44 @@ sbContext (SBInfo ns name key) = do
   manager <- newManagerSettings (mkManagerSettings (TLSSettingsSimple True False False) Nothing) 
   return $ SBContext ("https://" ++ ns ++ ".servicebus.windows.net") manager aContext
 
+-- | BrokerProperties
+data BrokerProperties = BrokerProperties {
+    deliveryCount :: Int,
+    enqueuedSeqNumber :: Integer,
+    enqueuedTimeUtc :: String,
+    lockToken :: String,
+    lockedUntilUtc :: String,
+    bpMessageId :: String,
+    bpSequenceNumber :: Integer,
+    bpState :: String,
+    bpTimeToLive :: Integer
+}
+ deriving (Show)
 
--- | Internal low-level method for performing HTTP calls. 
--- 
--- should be avoided by most users.
-enQueueRequest :: String -> RequestBody -> SBContext -> IO ()
-enQueueRequest queueName body (SBContext baseUrl manager aContext)  = do
-  token <- acsToken manager aContext
-  reqInit <- parseUrl (baseUrl ++ "/" ++ queueName ++ "/messages")
-  httpLbs (reqInit { method = methodPost,
-                     requestHeaders = [token],
-                     requestBody = body
-                   }) manager
-  return ()
+instance FromJSON BrokerProperties where
+    parseJSON (Object v) = BrokerProperties <$>
+                            v .: "DeliveryCount" <*>
+                            v .: "EnqueuedSequenceNumber" <*>
+                            v .: "EnqueuedTimeUtc" <*>
+                            v .: "LockToken" <*>
+                            v .: "LockedUntilUtc" <*>
+                            v .: "MessageId" <*>
+                            v .: "SequenceNumber" <*> 
+                            v .: "State" <*>
+                            v .: "TimeToLive"
+    parseJSON _           = mempty
 
--- | Internal low-level method for creating the HTTP calls. For internal use. 
---  
--- should be avoided by most users  
-deQueueRequest :: String -> Int -> SBContext -> IO L.ByteString
-deQueueRequest queueName timeout (SBContext baseUrl manager aContext) = do
-  token <- acsToken manager aContext
-  reqInit <- parseUrl (baseUrl ++ "/" ++ queueName ++ "/messages/head?timeout=" ++ (show timeout))
-  res <- httpLbs ( reqInit { method = methodDelete, 
-                     requestHeaders = [token]
-                   }) manager
-  return $ responseBody res
+instance ToJSON BrokerProperties where
+    toJSON (BrokerProperties dc esq etc lt luu msgId sn stt ttl) = object [
+                                        "DeliveryCount" .= dc,
+                                        "EnqueuedSequenceNumber" .= esq,
+                                        "EnqueuedTimeUtc" .= etc,
+                                        "LockToken" .= lt,
+                                        "LockedUntilUtc" .= luu,
+                                        "MessageId" .= msgId,
+                                        "SequenceNumber" .= sn,
+                                        "State" .= stt,
+                                        "TimeToLive" .= ttl
+                                        ]
+
+emptyBP = BrokerProperties 0 0 "" "" "" "" 0 "" 0
