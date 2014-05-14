@@ -2,12 +2,32 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                azure-servicebus
-version:             0.1.1.0
+version:             0.1.5.0
 synopsis:            Haskell wrapper over Microsoft Azure ServiceBus REST API
-description:         
+Description:         
+        /Overview/
+        .
         This library provides haskell wrappers over Microsoft Azure ServiceBus REST API.
-        The current version provides <http://msdn.microsoft.com/en-us/library/hh780762.aspx Runtime API> for queues.
+        The current version provides Runtime API for  <http://msdn.microsoft.com/en-us/library/hh780762.aspx queues and topics>.
+        
+        .
+        The following functionality is covered:
+        .
+         * Send bytestring (lazy as well as strict) to a Queue.
+        .
+         * Send bytestring (lazy as well as strict)  to a topic.
+        .
+         *  Destructively read data from a queue or topic into a lazy bytestring
+        .
+         * acquire peek-locks on messages on Queues and Subscriptions
+        .
+         * renew lock
+        .
+         * delete a locked message
+        .
+         * unlock a locked message
 
+        
 homepage:            https://github.com/kapilash/hs-azure
 license:             BSD3
 license-file:        LICENSE
@@ -21,6 +41,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Web.WindowsAzure.ServiceBus.Queue,
+                       Web.WindowsAzure.ServiceBus.Topic,
                        Web.WindowsAzure.ServiceBus
   other-modules:       Web.WindowsAzure.ServiceBus.SBTypes
   -- other-extensions:    

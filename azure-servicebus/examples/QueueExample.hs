@@ -31,7 +31,7 @@ main = do
   res3 <- deQueue queueName 10 sbContext
   print res3
   -- renew lock
-  renewLock queueName lockInfo sbContext
+  renewLock lockInfo sbContext
   -- delete the message
-  deleteMessage queueName lockInfo sbContext
+  deleteMessage lockInfo sbContext
 

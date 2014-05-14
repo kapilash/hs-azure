@@ -22,13 +22,15 @@ import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy as L
 import Network.HTTP.Conduit hiding (requestBodySource)
 import Network.HTTP.Client.Conduit hiding (httpLbs)
-import Network.HTTP.Types.Method (methodDelete, methodPost)
+import Network.HTTP.Types.Method (methodDelete, methodPost,methodPut)
 import Network.HTTP.Types.Header
+import Network(withSocketsDo)
 
 import Network.Connection (TLSSettings (..))
 import Data.Aeson
 import Data.Monoid
 import Control.Applicative
+import qualified Data.CaseInsensitive as CI
 
 
 -- | 'SBInfo' is encapsulation of Connection Information needed to connect to a Service Bus Namespace.
@@ -97,3 +99,65 @@ instance ToJSON BrokerProperties where
                                         ]
 
 emptyBP = BrokerProperties 0 0 "" "" "" "" 0 "" 0
+
+-- | 'LockedMsgInfo' provides Information of the locked message.
+--
+data LockedMsgInfo = LockedMsgInfo String BrokerProperties 
+                       deriving (Show)
+
+
+-- | Unlock a messages that has been locked earlier.
+-- 
+-- see 'Web.WindowsAzure.ServiceBus.Topic.peekLockTopic' and 'Web.WindowsAzure.ServiceBus.Queue.peekLockQueue'.
+--
+-- Also consult <http://msdn.microsoft.com/en-us/library/hh780723.aspx Unlock message from Queue> and <http://msdn.microsoft.com/en-us/library/hh780737.aspx Unlock message from Subscription> for details on the underlying REST API.
+unlockMessage :: LockedMsgInfo -> SBContext -> IO ()
+unlockMessage (LockedMsgInfo url brokerProps) (SBContext baseUrl manager acsContext) = do
+    token <- acsToken manager acsContext
+    reqInit <- parseUrl url
+    res <-withSocketsDo $  httpLbs (reqInit { method = methodPut,
+                              requestHeaders = [token]
+                            }) manager
+    return ()
+
+-- | Delete a message that has been locked earlier.
+-- 
+-- see 'Web.WindowsAzure.ServiceBus.Topic.peekLockTopic' and 'Web.WindowsAzure.ServiceBus.Queue.peekLockQueue'.
+--
+-- Also consult <http://msdn.microsoft.com/en-us/library/hh780767.aspx Delete Message from a Queue> and <http://msdn.microsoft.com/en-us/library/hh780768.aspx Delete Message from Subscription> for details on the underlying REST API.
+deleteMessage :: LockedMsgInfo -> SBContext -> IO ()
+deleteMessage (LockedMsgInfo url brokerProps) (SBContext baseUrl manager acsContext) = do
+    token <- acsToken manager acsContext
+    reqInit <- parseUrl url
+    res <-withSocketsDo $  httpLbs (reqInit { method = methodDelete,
+                              requestHeaders = [token]
+                            }) manager
+    return ()
+
+-- | Renews lock on a locked message
+-- 
+-- see 'Web.WindowsAzure.ServiceBus.Topic.peekLockTopic' and 'Web.WindowsAzure.ServiceBus.Queue.peekLockQueue'.
+--
+-- Also consult <http://msdn.microsoft.com/en-us/library/jj839741.aspx Renew Lock for message from Queue> and <http://msdn.microsoft.com/en-us/library/jj839746.aspx Renew-Lock for a message from subscription> for details on the underlying REST API.
+renewLock ::  LockedMsgInfo -> SBContext -> IO ()
+renewLock (LockedMsgInfo url brokerProps) (SBContext baseUrl manager acsContext) = do
+    token <- acsToken manager acsContext
+    reqInit <- parseUrl url
+    res <-withSocketsDo $  httpLbs (reqInit { method = methodPost,
+                              requestHeaders = [token]
+                            }) manager
+    return ()
+
+
+
+getQLI :: Response L.ByteString -> LockedMsgInfo
+getQLI res = LockedMsgInfo loc bp 
+    where
+      loc = case lookup hLocation (responseHeaders res) of
+            Nothing -> error "Expected Location Header in the response!"
+            Just x  -> C.unpack x
+      bp =   case lookup (CI.mk . C.pack $ "BrokerProperties") (responseHeaders res) of
+                Nothing -> emptyBP
+                Just bs -> case decode $ L.fromChunks [bs] of
+                            Nothing -> emptyBP
+                            Just b  -> b

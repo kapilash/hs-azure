@@ -43,10 +43,7 @@ module Web.WindowsAzure.ServiceBus.Queue(
   enQueueBodySrc,
   -- * Reading data from Queue
   deQueue,
-  peekLockQueue,
-  unlockMessage,
-  deleteMessage,
-  renewLock
+  peekLockQueue
    )where
 
 import qualified Data.ByteString.Char8 as C
@@ -66,7 +63,6 @@ import Network.HTTP.Types.Method
 
 import qualified Data.CaseInsensitive as CI
 import Network.Connection (TLSSettings (..))
-import Data.Aeson
 import Network(withSocketsDo)
 
 
@@ -149,7 +145,7 @@ deQueue  queueName timeout context =  deQueueRequest  queueName (timeout `mod` 5
 -- other receivers (on the same subscription) during the duration of the lock.
 --
 -- Refer <http://msdn.microsoft.com/en-us/library/hh780735.aspx ServiceBus documentation> for semantics of the underlying REST API.
-peekLockQueue :: String -> Int -> SBContext -> IO (QLockedMsgInfo,L.ByteString)
+peekLockQueue :: String -> Int -> SBContext -> IO (LockedMsgInfo,L.ByteString)
 peekLockQueue qName timeout (SBContext baseUrl manager aContext) = do
     token <- acsToken manager aContext
     reqInit <- parseUrl (baseUrl ++ "/" ++ qName ++ "/messages/head?timeout=" ++ (show timeout))
@@ -158,58 +154,3 @@ peekLockQueue qName timeout (SBContext baseUrl manager aContext) = do
                             }) manager
     return $ (getQLI res,responseBody res)
 
-getQLI :: Response L.ByteString -> QLockedMsgInfo
-getQLI res = QLockedMsgInfo loc bp 
-    where
-      loc = case lookup hLocation (responseHeaders res) of
-            Nothing -> error "Expected Location Header in the response!"
-            Just x  -> C.unpack x
-      bp =   case lookup (CI.mk . C.pack $ "BrokerProperties") (responseHeaders res) of
-                Nothing -> emptyBP
-                Just bs -> case decode $ L.fromChunks [bs] of
-                            Nothing -> emptyBP
-                            Just b  -> b
-
--- | Unlock a messages that has been locked earlier.
--- 
--- Given a queueName and the broker properties of the message that has been locked before,
--- 'unlockMessage' removes the lock so that the message can be consumed by other consumers.
---
--- see 'peekLockQueue' and <http://msdn.microsoft.com/en-us/library/hh780723.aspx ServiceBus documentation> for details on the underlying API.
-unlockMessage :: String -> QLockedMsgInfo -> SBContext -> IO ()
-unlockMessage queueName (QLockedMsgInfo url brokerProps) (SBContext baseUrl manager acsContext) = do
-    token <- acsToken manager acsContext
-    reqInit <- parseUrl url
-    res <-withSocketsDo $  httpLbs (reqInit { method = methodPut,
-                              requestHeaders = [token]
-                            }) manager
-    return ()
-
--- | Delete a message that has been locked earlier.
--- 
--- Given a queueName and the locked message info,  'deleteMessage' deletes the message from the queue
---
--- see 'peekLockQueue' and <http://msdn.microsoft.com/en-us/library/hh780767.aspx ServiceBus documentation> for details on the underlying API. 
-deleteMessage :: String -> QLockedMsgInfo -> SBContext -> IO ()
-deleteMessage queueName (QLockedMsgInfo url brokerProps) (SBContext baseUrl manager acsContext) = do
-    token <- acsToken manager acsContext
-    reqInit <- parseUrl url
-    res <-withSocketsDo $  httpLbs (reqInit { method = methodDelete,
-                              requestHeaders = [token]
-                            }) manager
-    return ()
-
--- | Renews lock on a locked message
--- 
--- Given a queueName and the locked-message info, 'renewLock' renews the lock
--- 'deleteMessage' deletes the message from the queue
---
--- see 'peekLockQueue' and <http://msdn.microsoft.com/en-us/library/jj839741.aspx ServiceBus documentation> for  details on the underlying API. 
-renewLock :: String -> QLockedMsgInfo -> SBContext -> IO ()
-renewLock queueName (QLockedMsgInfo url brokerProps) (SBContext baseUrl manager acsContext) = do
-    token <- acsToken manager acsContext
-    reqInit <- parseUrl url
-    res <-withSocketsDo $  httpLbs (reqInit { method = methodPost,
-                              requestHeaders = [token]
-                            }) manager
-    return ()

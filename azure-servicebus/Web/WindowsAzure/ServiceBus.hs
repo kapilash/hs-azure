@@ -7,6 +7,11 @@ module Web.WindowsAzure.ServiceBus (
     BrokerProperties (..),
     -- * Initialization
     simpleSBInfo,
-    sbContext ) where
+    sbContext,
+    -- * Locked Messages
+    unlockMessage,
+    renewLock,
+    deleteMessage
+    ) where
 
 import Web.WindowsAzure.ServiceBus.SBTypes
