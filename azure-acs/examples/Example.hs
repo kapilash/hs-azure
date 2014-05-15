@@ -1,6 +1,6 @@
 module Main where
 
-import Web.WindowsAzure.ACS 
+import Network.MicrosoftAzure.ACS 
 import Network.HTTP.Conduit
 import Network.HTTP.Client.Conduit
 import Network.Connection (TLSSettings (..))

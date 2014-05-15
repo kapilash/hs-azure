@@ -1,13 +1,10 @@
 -- |
--- Module : Web.WindowsAzure.ACS
--- Description : __Deprecated__ API for requesting password token from Windows Azure ACS. 
+-- Module : Network.MicrosoftAzure.ACS
+-- Description : API for requesting password token from Windows Azure ACS.
 -- Copyright : (c) Hemanth Kapila, 2014
 -- License : BSD3
 -- Maintainer : saihemanth@gmail.com
 -- Stability  : Experimental
---
---  
--- __ DEPRECATED __  Use "Network.MicrosoftAzure.ACS" instead.
 --
 -- Provides API to request password token from WindowsAzure ACS. The security token is needed by web applications and services that handle authentication using ACS.
 -- Please refer to <http://msdn.microsoft.com/en-us/library/hh278947.aspx ACS Management Service API> for further information on ACS.
@@ -15,12 +12,11 @@
 -- Following piece of code illustrates the use of API
 --
 -- @
--- import Web.WindowsAzure.ACS 
--- import Network.HTTP.Conduit 
+-- import Network.MicrosoftAzure.ACS
+-- import Network.HTTP.Conduit
 -- import Network.HTTP.Client.Conduit
 -- import Network.Connection (TLSSettings (..))
 -- import qualified Data.ByteString.Char8 as C
--- import Control.Concurrent
 --
 -- main = do
 --      acsCtx <- acsContext (AcsInfo "blahblah-sb" (C.pack "http://blahblah.servicebus.windows.net/" ) (C.pack "owner") (C.pack "blahBlahBlahBlah"))
@@ -28,14 +24,13 @@
 --      t1 <- acsToken manager acsCtx
 --      print t1
 -- @
--- 
-module Web.WindowsAzure.ACS ( 
+--
+module Network.MicrosoftAzure.ACS (
   -- * Types
   -- * Acs Info
   AcsInfo (..),
   -- * Acs Context
   AcsContext,
-  
   AcsToken,
   -- * functions
   acsContext,
@@ -58,14 +53,14 @@ import Network(withSocketsDo)
 
 -- | 'AcsInfo' encapsulates the information needed to get the token from Azure ACS:
 --
--- 
---     *  acs namespace 
---     *  the relying party address 
+--
+--     *  acs namespace
+--     *  the relying party address
 --     *  the issuer and
 --     *  the issuer key.
 data AcsInfo = AcsInfo String !C.ByteString !C.ByteString !C.ByteString
                  deriving (Eq,Show)
-                          
+
 {- | synonym for the ACS password token
 -}
 type AcsToken = Header
@@ -83,7 +78,7 @@ data AcsContext = AcsContext  !AcsInfo (MVar AcsResponse)
 -- | construct the context object. This call does not perform any network call yet.
 acsContext :: AcsInfo -> IO AcsContext
 acsContext a = do
-  b <- newMVar NotConnectedToAcs 
+  b <- newMVar NotConnectedToAcs
   return $ AcsContext a b
 
 
@@ -105,7 +100,7 @@ acsToken manager (AcsContext info mv) = do
   utcTime <- getCurrentTime
   acsResp <- takeMVar mv
   if canReuse utcTime acsResp
-     then do { putMVar mv acsResp; return (wrapToken acsResp)} 
+     then do { putMVar mv acsResp; return (wrapToken acsResp)}
     else do
     resp <- doAcsPost info manager
     putMVar mv resp
@@ -135,5 +130,3 @@ doAcsPost (AcsInfo url endpoint issuer key) manager = do
      i <- decimal
      return $ AcsResponse (toHeader b1) (addUTCTime (fromInteger $ i - 300) currTime)
    toHeader bs = (hAuthorization, C.concat [(C.pack  "WRAP access_token=\""), (urlDecode False bs), C.pack "\""])
-     
-     
