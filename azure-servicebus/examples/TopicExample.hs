@@ -1,7 +1,7 @@
 module Main where
 
-import Web.WindowsAzure.ServiceBus.Topic
-import Web.WindowsAzure.ServiceBus
+import Network.MicrosoftAzure.ServiceBus.Topic
+import Network.MicrosoftAzure.ServiceBus
 import qualified Data.ByteString.Char8 as C
 import Network(withSocketsDo)
 
@@ -11,7 +11,7 @@ sbNamespace = "SBNAMESPACE"
 sbIssuerKey = C.pack "someSubscriptionKey="
 sbIssuerName = C.pack "owner"
 
-sbinfo = SBInfo sbNamespace sbIssuerName sbIssuerKey 
+sbinfo = SBInfo sbNamespace sbIssuerName sbIssuerKey
 message1 = C.pack "Hello from Haskell"
 message2 = C.pack "Haskell Rocks"
 
@@ -35,4 +35,3 @@ main = do
   renewLock lockInfo sbContext
   -- delete the message
   deleteMessage lockInfo sbContext
-

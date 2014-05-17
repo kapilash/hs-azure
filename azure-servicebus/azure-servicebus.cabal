@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                azure-servicebus
-version:             0.1.5.0
+version:             0.1.6.0
 synopsis:            Haskell wrapper over Microsoft Azure ServiceBus REST API
 Description:         
         /Overview/
@@ -42,11 +42,15 @@ cabal-version:       >=1.10
 library
   exposed-modules:     Web.WindowsAzure.ServiceBus.Queue,
                        Web.WindowsAzure.ServiceBus.Topic,
-                       Web.WindowsAzure.ServiceBus
-  other-modules:       Web.WindowsAzure.ServiceBus.SBTypes
+                       Web.WindowsAzure.ServiceBus,
+                       Network.MicrosoftAzure.ServiceBus.Queue,
+                       Network.MicrosoftAzure.ServiceBus.Topic,
+                       Network.MicrosoftAzure.ServiceBus
+  other-modules:       Web.WindowsAzure.ServiceBus.SBTypes,
+                       Network.MicrosoftAzure.ServiceBus.SBTypes
   -- other-extensions:    
   build-depends:       base >=4.6 && < 5.0, 
-                       azure-acs  <0.2, 
+                       azure-acs >= 0.0.1.0 && <0.2, 
                        bytestring >=0.10 && <0.12, 
                        http-conduit >=2.1 && <2.2, 
                        conduit >=1.1 && <1.2, 

@@ -1,12 +1,10 @@
 -- |
--- Module : Web.WindowsAzure.ServiceBus.Queue
+-- Module : Network.MicrosoftAzure.ServiceBus.Queue
 -- Description : API for reading from and writing to ServiceBus Queue
 -- Copyright : (c) Hemanth Kapila, 2014
 -- License : BSD3
 -- Maintainer : saihemanth@gmail.com
 -- Stability  : Experimental
---
--- __ deprecated __ Use "Network.MicrosoftAzure.ServiceBus.Queue" instead.
 --
 -- Provides API to pull from and push to ServiceBus queue
 -- Please refer to <http://msdn.microsoft.com/en-us/library/hh780726.aspx Service Bus Rest API> for information on the API provided by
@@ -15,8 +13,8 @@
 -- Simple example for how to use this library is as below
 --
 -- @
--- import Web.WindowsAzure.ServiceBus.Queue
--- import Web.WindowsAzure.ServiceBus
+-- import Network.MicrosoftAzure.ServiceBus.Queue
+-- import Network.MicrosoftAzure.ServiceBus
 -- import qualified Data.ByteString.Char8 as C
 --
 -- queueName = "queueName"
@@ -36,7 +34,7 @@
 --
 -- see examples (available as a part of distribution) for a more detailed example.
 
-module Web.WindowsAzure.ServiceBus.Queue(
+module Network.MicrosoftAzure.ServiceBus.Queue(
   -- Locked Message Info
   QLockedMsgInfo,
   -- * Pushing data to Queue
@@ -53,8 +51,8 @@ import qualified Data.ByteString.Lazy as L
 import Data.Conduit
 import Data.Int
 
-import Web.WindowsAzure.ACS
-import Web.WindowsAzure.ServiceBus.SBTypes
+import Network.MicrosoftAzure.ACS
+import Network.MicrosoftAzure.ServiceBus.SBTypes
 import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy as L
 import Network.HTTP.Conduit hiding (requestBodySource)

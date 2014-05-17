@@ -1,16 +1,13 @@
 -- |
--- Module : Web.WindowsAzure.ServiceBus
+-- Module : Network.MicrosoftAzure.ServiceBus
 -- Description : Haskell Types for interacting with ServiceBus
 -- Copyright : (c) Hemanth Kapila, 2014
 -- License : BSD3
 -- Maintainer : saihemanth@gmail.com
 -- Stability  : Experimental
 --
--- __deprecated__ Use "Network.MicrosoftAzure.ServiceBus" instead.
---
 -- Haskell API for working with <http://azure.microsoft.com/en-us/services/messaging/ Microsoft Azure ServiceBus>
-
-module Web.WindowsAzure.ServiceBus (
+module Network.MicrosoftAzure.ServiceBus (
     -- * Servicebus Types
     SBInfo (..),
     -- | Abstract type representing the service bus context.
@@ -26,4 +23,4 @@ module Web.WindowsAzure.ServiceBus (
     deleteMessage
     ) where
 
-import Web.WindowsAzure.ServiceBus.SBTypes
+import Network.MicrosoftAzure.ServiceBus.SBTypes

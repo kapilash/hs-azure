@@ -1,12 +1,10 @@
 -- |
--- Module : Web.WindowsAzure.ServiceBus.Topic
+-- Module : Network.MicrosoftAzure.ServiceBus.Topic
 -- Description : API for reading from and writing to ServiceBus Topic
 -- Copyright : (c) Hemanth Kapila, 2014
 -- License : BSD3
 -- Maintainer : saihemanth@gmail.com
 -- Stability  : Experimental
---
--- __ Deprecated __  Use "Network.MicrosoftAzure.ServiceBus.Topic" instead.
 --
 -- Provides API to pull from and push to ServiceBus topic
 -- Please refer to <http://msdn.microsoft.com/en-us/library/hh780752.aspx Service Bus Rest API> for information on the API provided by
@@ -15,8 +13,8 @@
 -- Simple example for how to use this library is as below
 --
 -- @
--- import Web.WindowsAzure.ServiceBus.Topic
--- import Web.WindowsAzure.ServiceBus
+-- import Network.MicrosoftAzure.ServiceBus.Topic
+-- import Network.MicrosoftAzure.ServiceBus
 -- import qualified Data.ByteString.Char8 as C
 --
 -- topicName = "topicName"
@@ -37,7 +35,7 @@
 --
 -- see examples (available as a part of distribution) for a more detailed example.
 
-module Web.WindowsAzure.ServiceBus.Topic(
+module Network.MicrosoftAzure.ServiceBus.Topic(
   -- * Pushing data to Topic
   sendTopicBS,
   sendTopicLBS,
@@ -52,8 +50,8 @@ import qualified Data.ByteString.Lazy as L
 import Data.Conduit
 import Data.Int
 
-import Web.WindowsAzure.ACS
-import Web.WindowsAzure.ServiceBus.SBTypes
+import Network.MicrosoftAzure.ACS
+import Network.MicrosoftAzure.ServiceBus.SBTypes
 import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy as L
 import Network.HTTP.Conduit hiding (requestBodySource)

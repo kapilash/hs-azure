@@ -1,16 +1,15 @@
 -- |
--- Module : Web.WindowsAzure.ServiceBus.SBTypes
+-- Module : Network.MicrosoftAzure.ServiceBus.SBTypes
 -- Description : Haskell Types for interacting with ServiceBus
 -- Copyright : (c) Hemanth Kapila, 2014
 -- License : BSD3
 -- Maintainer : saihemanth@gmail.com
 -- Stability  : Experimental
 --
--- __ deprecated __
 -- Provides Types used across the rest of the API.
 --
 {-# LANGUAGE OverloadedStrings #-}
-module Web.WindowsAzure.ServiceBus.SBTypes
+module Network.MicrosoftAzure.ServiceBus.SBTypes
    where
 
 import qualified Data.ByteString.Char8 as C
@@ -18,7 +17,7 @@ import qualified Data.ByteString.Lazy as L
 import Data.Conduit
 import Data.Int
 
-import Web.WindowsAzure.ACS
+import Network.MicrosoftAzure.ACS
 import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy as L
 import Network.HTTP.Conduit hiding (requestBodySource)
@@ -39,8 +38,11 @@ import qualified Data.CaseInsensitive as CI
 -- This information is typically found when you click on the /Connection Information/ link on the azure portal and comprises of
 --
 -- * ServiceBus namespace
+--
 -- * Issuer Name
+--
 -- * Issuer Key
+--
 --
 data SBInfo = SBInfo String C.ByteString C.ByteString
               deriving (Show)
@@ -109,7 +111,7 @@ data LockedMsgInfo = LockedMsgInfo String BrokerProperties
 
 -- | Unlock a messages that has been locked earlier.
 --
--- see 'Web.WindowsAzure.ServiceBus.Topic.peekLockTopic' and 'Web.WindowsAzure.ServiceBus.Queue.peekLockQueue'.
+-- see 'Network.MicrosoftAzure.ServiceBus.Topic.peekLockTopic' and 'Network.MicrosoftAzure.ServiceBus.Queue.peekLockQueue'.
 --
 -- Also consult <http://msdn.microsoft.com/en-us/library/hh780723.aspx Unlock message from Queue> and <http://msdn.microsoft.com/en-us/library/hh780737.aspx Unlock message from Subscription> for details on the underlying REST API.
 unlockMessage :: LockedMsgInfo -> SBContext -> IO ()
@@ -123,7 +125,7 @@ unlockMessage (LockedMsgInfo url brokerProps) (SBContext baseUrl manager acsCont
 
 -- | Delete a message that has been locked earlier.
 --
--- see 'Web.WindowsAzure.ServiceBus.Topic.peekLockTopic' and 'Web.WindowsAzure.ServiceBus.Queue.peekLockQueue'.
+-- see 'Network.MicrosoftAzure.ServiceBus.Topic.peekLockTopic' and 'Network.MicrosoftAzure.ServiceBus.Queue.peekLockQueue'.
 --
 -- Also consult <http://msdn.microsoft.com/en-us/library/hh780767.aspx Delete Message from a Queue> and <http://msdn.microsoft.com/en-us/library/hh780768.aspx Delete Message from Subscription> for details on the underlying REST API.
 deleteMessage :: LockedMsgInfo -> SBContext -> IO ()
@@ -137,7 +139,7 @@ deleteMessage (LockedMsgInfo url brokerProps) (SBContext baseUrl manager acsCont
 
 -- | Renews lock on a locked message
 --
--- see 'Web.WindowsAzure.ServiceBus.Topic.peekLockTopic' and 'Web.WindowsAzure.ServiceBus.Queue.peekLockQueue'.
+-- see 'Network.MicrosoftAzure.ServiceBus.Topic.peekLockTopic' and 'Network.MicrosoftAzure.ServiceBus.Queue.peekLockQueue'.
 --
 -- Also consult <http://msdn.microsoft.com/en-us/library/jj839741.aspx Renew Lock for message from Queue> and <http://msdn.microsoft.com/en-us/library/jj839746.aspx Renew-Lock for a message from subscription> for details on the underlying REST API.
 renewLock ::  LockedMsgInfo -> SBContext -> IO ()
