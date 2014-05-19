@@ -43,7 +43,9 @@ module Network.MicrosoftAzure.ServiceBus.Queue(
   enQueueBodySrc,
   -- * Reading data from Queue
   deQueue,
-  peekLockQueue
+  peekLockQueue,
+  createQueue,
+  makeQueue
    )where
 
 import qualified Data.ByteString.Char8 as C
@@ -64,6 +66,45 @@ import Network.HTTP.Types.Method
 import qualified Data.CaseInsensitive as CI
 import Network.Connection (TLSSettings (..))
 import Network(withSocketsDo)
+import Data.ByteString.Builder 
+import Data.Monoid
+import Data.Foldable                        (foldMap)
+import Data.List                            (intersperse)
+import Control.Applicative
+
+
+data Queue = Queue String QueueDesc
+
+instance Show Queue where
+    show (Queue s d) = s
+
+
+data QueueDesc = QueueDesc { sbQMaxSizeInMB :: Int,
+                             sbQSizeInBytes :: Int,
+                             sbQMessageCount :: Int,
+                             sbQDefaultMsgTTL :: Int,
+                             sbQLockDuration :: Int,
+                             sbQMaxDeliveryCount :: Int,
+                             sbQDupDetectionTimeWindow:: Int,
+                             sbQRequiresDupDetection:: Bool,
+                             sbQEnableBatchedOper::Bool,
+                             sbQDeadLetterOnExpire::Bool,
+                             sbQRequiresSession :: Bool
+                            }
+
+makeQueue str = Queue str (QueueDesc 1024 100 0 0 0 0 0 False False False False) 
+
+qdToBuilder :: QueueDesc -> L.ByteString
+qdToBuilder qd = toLazyByteString $ (string7 "<entry xmlns='http://www.w3.org/2005/Atom'> <content type='application/xml'>  <QueueDescription xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://schemas.microsoft.com/netservices/2010/10/servicebus/connect\">") 
+                 <> (string7 "<LockDuration> PT2M</LockDuration>") 
+                 <> (string7 "<MaxSizeInMegaBytes>1024</MaxSizeInMegaBytes>") 
+                 <> (string7 "<RequiresDuplicateDetection>false</RequiresDuplicateDetection>") 
+                 <> (string7 "<RequiresSession>false</RequiresSession>") 
+                 <> (string7 "<DefaultMessageTimeToLive>P10675199DT2H48M5.4775807S</DefaultMessageTimeToLive>") 
+                 <> (string7 "<DeadLetteringOnMessageExpiration>false</DeadLetteringOnMessageExpiration>")
+                 <> (string7 "<DuplicateDetectionHistoryTimeWindow>PT10M</DuplicateDetectionHistoryTimeWindow>")
+                 <> (string7 "</QueueDescription></content></entry>")
+
 
 
 -- | 'QLockedMsgInfo' provides Information of the locked message from a queue.
@@ -153,3 +194,21 @@ peekLockQueue qName timeout (SBContext baseUrl manager aContext) = do
                               requestHeaders = [token]
                             }) manager
     return $ (getQLI res,responseBody res)
+
+
+-- | Create a queue with a given name
+--
+-- Atomically retrieves the next message from a queue and locks it for further processing. The message is guaranteed not to be delivered to
+-- other receivers (on the same subscription) during the duration of the lock.
+--
+-- Refer <http://msdn.microsoft.com/en-us/library/hh780735.aspx ServiceBus documentation> for semantics of the underlying REST API.
+createQueue :: String ->  SBContext -> IO Queue
+createQueue name (SBContext baseUrl manager aContext) = do
+    let (Queue qName qd) = makeQueue name
+    token <- acsToken manager aContext
+    reqInit <- parseUrl (baseUrl ++ "/" ++ qName) 
+    res <-withSocketsDo $  httpLbs (reqInit { method = methodPut,
+                              requestHeaders = [token,(hContentType,C.pack "application/atom+xml;type=entry;charset=utf-8")],
+                              requestBody = RequestBodyLBS (qdToBuilder qd)
+                            }) manager
+    return $ Queue qName qd
